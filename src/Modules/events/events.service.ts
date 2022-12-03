@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import Event from './entities/event.entity';
 import Workshop from './entities/workshop.entity';
 
@@ -179,6 +180,35 @@ export class EventsService {
     ```
      */
   async getFutureEventWithWorkshops() {
-    throw new Error('TODO task 2');
+    // throw new Error('TODO task 2');
+    //get all future events with workshops
+
+    let events = await Event.findAll({});
+    // get all events in json format
+    let eventsArr = events.map((event) => event.toJSON());
+    //get all workshops where in workshops have not started
+    let workshops = await Workshop.findAll({
+      where: {
+        eventId: eventsArr.map((event) => event.id),
+        start: {
+          [Op.gt]: new Date(),
+        },
+      },
+    });
+    //get all workshops in json format
+    workshops = workshops.map((workshop) => workshop.toJSON());
+
+
+    eventsArr.forEach((event) => {
+      event['workshops'] = workshops.filter(
+        (workshop) => workshop.eventId === event.id
+      );
+    });
+    //remove events that have no workshops 
+    eventsArr = eventsArr.filter((event) => event.workshops.length > 0);
+
+    return eventsArr;
+
+
   }
 }
