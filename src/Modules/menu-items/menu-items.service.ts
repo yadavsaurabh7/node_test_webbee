@@ -1,9 +1,11 @@
+import MenuItem from "./entities/menu-item.entity";
+
 export class MenuItemsService {
 
   /* TODO: complete getMenuItems so that it returns a nested menu structure
     Requirements:
     - your code should result in EXACTLY one SQL query no matter the nesting level or the amount of menu items.
-    - it should work for infinite level of depth (children of childrens children of childrens children, ...)
+    - it should work for level of depth (children of childrens children of childrens children, ...)
     - verify your solution with `npm run test`
     - do a `git commit && git push` after you are done or when the time limit is over
     - post process your results in javascript
@@ -76,6 +78,34 @@ export class MenuItemsService {
   */
 
   async getMenuItems() {
-    throw new Error('TODO in task 3');
-  }
+
+    const menuItems = await MenuItem.findAll({});
+    const menuItemsJson = menuItems.map((menuItem) => menuItem.toJSON());
+
+    const rootMenuItems = menuItemsJson.filter(menuItem => !menuItem.parentId);
+    const childrenMenuItems = menuItemsJson.filter(menuItem => menuItem.parentId);
+    // //add children array to childrenMenuItems
+    childrenMenuItems.forEach(child => child.children = []);
+    // //add children to their parents in childrenMenuItems
+    childrenMenuItems.forEach(child => {
+        const parent = childrenMenuItems.find(parent => parent.id === child.parentId);
+        if (parent) {
+            parent.children.push(child);
+        }
+    });
+
+    // rootMenuItems.forEach(root => {
+    //     childrenMenuItems.forEach(child => {
+    //         if (child.parentId === root.id) {
+    //             root.children.push(child);
+    //         }
+    //     });
+    // });
+    rootMenuItems[0]['children'] = childrenMenuItems;
+
+    // const rootMenuItemsJson = rootMenuItems.map((menuItem) => menuItem.toJSON());
+    console.log(rootMenuItems);
+
+  return rootMenuItems;
+}
 }
